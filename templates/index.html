@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Comment Sentiment</title>
+  
+  <!-- Chart.js Library -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Add custom styles for a playful design -->
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f8ff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    h2 {
+      font-size: 2.5rem;
+      color: #ff6347;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    #form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    input {
+      padding: 10px;
+      font-size: 1rem;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      width: 250px;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+    }
+
+    input:focus {
+      border-color: #ff6347;
+      box-shadow: 0 0 5px rgba(255, 99, 71, 0.5);
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #ff6347;
+      color: white;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s;
+    }
+
+    button:hover {
+      background-color: #f08080;
+      transform: scale(1.1);
+    }
+
+    canvas {
+      margin-top: 30px;
+      border: 3px solid #ff6347;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    #commentsList {
+      list-style-type: none;
+      padding: 0;
+      margin-top: 20px;
+      width: 80%;
+      max-width: 600px;
+    }
+
+    #commentsList li {
+      background-color: #fff8dc;
+      margin: 5px 0;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease-in-out;
+    }
+
+    #commentsList li:hover {
+      transform: scale(1.05);
+    }
+
+    .sentiment-positive {
+      color: #006400;
+    }
+
+    .sentiment-negative {
+      color: #b22222;
+    }
+
+    .sentiment-neutral {
+      color: #2f4f4f;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Analisis Sentimen Komentar YouTube</h2>
+  
+  <form id="form">
+    <input type="text" name="video_id" placeholder="Masukkan Video ID" required>
+    <button type="submit">Analisa</button>
+  </form>
+
+  <canvas id="sentimentChart" width="400" height="200"></canvas>
+  
+  <ul id="commentsList"></ul>
+
+  <script>
+    document.getElementById('form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const res = await fetch('/analyze', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+
+      // Update chart
+      const ctx = document.getElementById('sentimentChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Positive', 'Neutral', 'Negative'],
+          datasets: [{
+            label: '# of Comments',
+            data: [
+              data.summary.positive,
+              data.summary.neutral,
+              data.summary.negative
+            ],
+            backgroundColor: ['#98fb98', '#d3d3d3', '#ffcccb']
+          }]
+        }
+      });
+
+      // Display comments with sentiment
+      const list = document.getElementById('commentsList');
+      list.innerHTML = '';
+      data.details.forEach(item => {
+        const li = document.createElement('li');
+        li.classList.add('sentiment-' + item.sentiment);
+        li.textContent = `[${item.sentiment}] ${item.text}`;
+        list.appendChild(li);
+      });
+    });
+  </script>
+
+</body>
+</html>
